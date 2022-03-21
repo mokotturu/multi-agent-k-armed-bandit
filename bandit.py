@@ -6,8 +6,9 @@ class Bandit:
 	@param	mu		means for the arms
 	@param	sigma	standard deviation for the arms
 	'''
-	def __init__(self, k: int, means: np.ndarray, sds: np.ndarray):
-		self.k = k
+	def __init__(self, means: np.ndarray, sds: np.ndarray):
+		if (means.size != sds.size):
+			raise ValueError(f'Number of means {means.size} does not match number of standard deviations {sds.size}')
 		self.means = means
 		self.sds = sds
 	
@@ -15,6 +16,6 @@ class Bandit:
 	@param	k		which arm to pull
 	'''
 	def act(self, k: int) -> dict:
-		if k < 0 or k >= self.k:
+		if k < 0 or k >= self.means.size:
 			raise ValueError(f'Invalid arm index. Received value: {k}')
 		return { 'value': np.random.normal(self.means[k], self.sds[k]), 'regret': np.max(self.means) - self.means[k] }

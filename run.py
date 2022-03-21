@@ -1,46 +1,50 @@
-from bandit import Bandit
-import numpy as np
 import matplotlib.pyplot as plt
-import time
+import numpy as np
+from tqdm import tqdm
 
-startTime = time.time()
+from bandit import Bandit
 
-numArms = 10
-epsilons = [0.1, 0.01, 0]
+def main() -> None:
+	numArms = 2
+	epsilons = np.array([0.1, 0.01, 0])
 
-vals = [[] for i in range(len(epsilons))]
-regrets = [[] for i in range(len(epsilons))]
-est_actvals = np.array([[0.0] * numArms for i in range(len(epsilons))])
+	timesteps = 1000 # timesteps
+	samples = 2000
 
-for run in range(2000):	# 2000 randomly generated k-bandit problems
-	# create new bandit for every run
-	bd1 = Bandit(numArms, np.random.normal(0, 1.0, numArms), np.full(numArms, 1.0))
+	values = np.zeros((len(epsilons), samples, timesteps))
+	regrets = np.zeros((len(epsilons), samples, timesteps))
+
+	# 2000 randomly generated k-bandit problems
+	for run in tqdm(range(samples)):
+		# one run for each epsilon
+		runSample(values, regrets, numArms, epsilons, timesteps, run)
+
 	for eps in range(len(epsilons)):
-		# initial action value is 0
-		vals[eps].append([0])
-		regrets[eps].append([0])
-	for i in range(999):	# 1000 timesteps; 1st timestep is 0
-		for eps in range(len(epsilons)):	# get action for each epsilon
-			if np.random.rand() < epsilons[eps]:
-				# random action
-				arm_to_pull = np.random.randint(numArms)
-			else:
-				# pull the arm with highest mean
-				arm_to_pull = np.argmax(est_actvals[eps])
+		plt.plot(np.mean(values[eps, :, :], axis=0), label = f'ε = {epsilons[eps]}')
 
-			act_val = bd1.act(arm_to_pull)
-			vals[eps][run].append(act_val['value'])
-			regrets[eps][run].append(act_val['regret'])
-			est_actvals[eps][arm_to_pull] += (1 / (i + 2)) * (act_val['value'] - est_actvals[eps][arm_to_pull])
+	plt.xlabel('Steps')
+	plt.ylabel('Average Reward')
+	plt.ylim([0, 1])
+	plt.legend()
+	plt.show()
 
-endTime = time.time()	# time took to complete all simulations
+def runSample(values: np.ndarray, regrets: np.ndarray, numArms: int, epsilons: np.ndarray, timestep: int, run: int) -> None:
+	# create new bandit for every run
+	means = np.random.normal(0, 1.0, numArms)
+	# means = np.array([0.1, 0.5])
+	# print(means)
+	bd = Bandit(means, np.full(numArms, 1.0))
+	est_actvals = np.zeros((len(epsilons), numArms))
+	arms = [i for i in range(numArms)]
 
-print(f'Took {endTime - startTime} seconds to finish all simulations')
+	for i in range(timestep): # 1000 timesteps
+		for eps in range(len(epsilons)): # get action for each epsilon
+			arm_to_pull = np.argmax(est_actvals[eps]) if np.random.rand() >= epsilons[eps] else np.random.choice(arms)
+			reward = bd.act(arm_to_pull)
 
-for eps in range(len(epsilons)):
-	plt.plot(np.average(np.array(vals[eps]), 0), label = f'ε = {epsilons[eps]}')
+			values[eps, run, i] = reward['value']
+			regrets[eps, run, i] = reward['regret']
+			est_actvals[eps, arm_to_pull] += 0.1 * (reward['value'] - est_actvals[eps, arm_to_pull])
 
-plt.xlabel('Steps')
-plt.ylabel('Average Reward')
-plt.legend()
-plt.show()
+if __name__ == '__main__':
+	main()
