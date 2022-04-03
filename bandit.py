@@ -15,7 +15,7 @@ class Bandit:
 	'''
 	@param	k		which arm to pull
 	'''
-	def act(self, k: int) -> dict:
+	def act(self, k: int) -> tuple:
 		if k < 0 or k >= self.means.size:
 			raise ValueError(f'Invalid arm index. Received value: {k}')
-		return { 'value': np.random.normal(self.means[k], self.sds[k]), 'regret': np.max(self.means) - self.means[k] }
+		return np.random.normal(self.means[k], self.sds[k]), np.max(self.means) - self.means[k]
