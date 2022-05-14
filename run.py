@@ -6,9 +6,11 @@ from scipy.sparse.csgraph import laplacian
 
 from bandit import Bandit
 from policy import EpsilonGreedyPolicy, UCBPolicy
+from multiprocessing import Pool, cpu_count
 
 def main() -> None:
 	runMultiAgent()
+	# runUCB()
 
 # run epsilon greedy
 def runEPSG() -> None:
@@ -36,8 +38,8 @@ def runEPSG() -> None:
 # run UCB
 def runUCB() -> None:
 	numArms = 10
-	runs = 1000
-	T = 500
+	runs = 10000
+	T = 1000
 
 	ucbSim = UCBPolicy(numArms, runs, T)
 	result = playBasic(ucbSim, runs, T, numArms)
@@ -74,8 +76,16 @@ def generateP(A, kappa):
 # run multi agent
 def runMultiAgent() -> None:
 	numArms = 10
-	runs = 10
-	T = 500
+	runs = 10000
+	T = 1000
+	networks = [
+		'Example Network 1',
+		'All-to-All',
+		'Ring',
+		'House',
+		'Line',
+		'Star'
+	]
 	Amats = [
 		np.array([
 			[0, 1, 1, 1],
@@ -83,48 +93,54 @@ def runMultiAgent() -> None:
 			[1, 1, 0, 0],
 			[1, 0, 0, 0],
 		]),
-		# np.array([
-		# 	[0, 1, 1, 1, 1],
-		# 	[1, 0, 1, 1, 1],
-		# 	[1, 1, 0, 1, 1],
-		# 	[1, 1, 1, 0, 1],
-		# 	[1, 1, 1, 1, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 0, 0, 1],
-		# 	[1, 0, 1, 0, 0],
-		# 	[0, 1, 0, 1, 0],
-		# 	[0, 0, 1, 0, 1],
-		# 	[1, 0, 0, 1, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 0, 0, 1],
-		# 	[1, 0, 1, 0, 1],
-		# 	[0, 1, 0, 1, 0],
-		# 	[0, 0, 1, 0, 1],
-		# 	[1, 1, 0, 1, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 0, 0, 1],
-		# 	[1, 0, 1, 0, 0],
-		# 	[0, 1, 0, 0, 0],
-		# 	[0, 0, 0, 0, 1],
-		# 	[1, 0, 0, 1, 0],
-		# ]),
-		# np.array([
-		# 	[0, 0, 1, 0, 0],
-		# 	[0, 0, 1, 0, 0],
-		# 	[1, 1, 0, 1, 1],
-		# 	[0, 0, 1, 0, 0],
-		# 	[0, 0, 1, 0, 0],
-		# ]),
+		np.array([
+			[0, 1, 1, 1, 1],
+			[1, 0, 1, 1, 1],
+			[1, 1, 0, 1, 1],
+			[1, 1, 1, 0, 1],
+			[1, 1, 1, 1, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1],
+			[1, 0, 1, 0, 0],
+			[0, 1, 0, 1, 0],
+			[0, 0, 1, 0, 1],
+			[1, 0, 0, 1, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1],
+			[1, 0, 1, 0, 1],
+			[0, 1, 0, 1, 0],
+			[0, 0, 1, 0, 1],
+			[1, 1, 0, 1, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1],
+			[1, 0, 1, 0, 0],
+			[0, 1, 0, 0, 0],
+			[0, 0, 0, 0, 1],
+			[1, 0, 0, 1, 0],
+		]),
+		np.array([
+			[0, 0, 1, 0, 0],
+			[0, 0, 1, 0, 0],
+			[1, 1, 0, 1, 1],
+			[0, 0, 1, 0, 0],
+			[0, 0, 1, 0, 0],
+		]),
 	]
 	kappa = 0.02
 
-	for i, A in enumerate(Amats):
+	for network, A in zip(networks, Amats):
 		P = generateP(A, kappa)
 		result = playMultiAgent(runs, T, numArms, A.shape[0], P)
-		plt.plot(np.mean(result, axis=0), label=f'Network {i}')
+		print(f'finished {network}')
+
+		plt.plot(np.mean(result, axis=0), label=network)
+
+		# # for agent-wise plot
+		# for i, r in enumerate(result):
+		# 	plt.plot(r, label=f'Agent {i + 1}')
 
 	plt.xlabel('Steps')
 	plt.ylabel('Average Regret')
@@ -182,14 +198,19 @@ def playMultiAgentRun(T: int, N: int, M: int, P):
 @param N:		number of arms
 @param M:		number of agents
 @param P:		P matrix
+
+pools each run into separate processes for multiprocessing
 '''
 def playMultiAgent(runs: int, T: int, N: int, M: int, P):
-	cumreg = np.zeros((runs, M, T)) # cumulative regret to plot
+	pool = Pool(cpu_count())
 
-	for run in range(runs):
-		cumreg[run] = playMultiAgentRun(T, N, M, P)
+	result_objs = [pool.apply_async(playMultiAgentRun, args=(T, N, M, P)) for run in range(runs)]
+	results = np.array([r.get() for r in result_objs])
 
-	return np.cumsum(np.mean(cumreg, axis=0), axis=1)
+	pool.close()
+	pool.join()
+
+	return np.cumsum(np.mean(results, axis=0), axis=1)
 
 if __name__ == '__main__':
 	main()
