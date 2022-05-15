@@ -1,4 +1,6 @@
 import math
+from multiprocessing import Pool, cpu_count
+from time import ctime, time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,9 +8,9 @@ from scipy.sparse.csgraph import laplacian
 
 from bandit import Bandit
 from policy import EpsilonGreedyPolicy, UCBPolicy
-from multiprocessing import Pool, cpu_count
 
 def main() -> None:
+	print(f'Simulations started at {ctime(time())}')
 	runMultiAgent()
 	# runUCB()
 
@@ -30,6 +32,8 @@ def runEPSG() -> None:
 		result = playBasic(sim, runs, T, numArms)
 		plt.plot(result, label=f'ε = {epsilons[i]}')
 
+	print(f'Epsilon Greedy simulations ended at {ctime(time())}')
+
 	plt.xlabel('Steps')
 	plt.ylabel('Average Reward')
 	plt.legend()
@@ -44,25 +48,36 @@ def runUCB() -> None:
 	ucbSim = UCBPolicy(numArms, runs, T)
 	result = playBasic(ucbSim, runs, T, numArms)
 
+	print(f'UCB simulations ended at {ctime(time())}')
+
 	plt.plot(result, label='UCB')
 	plt.xlabel('Steps')
 	plt.ylabel('Average Reward')
 	plt.legend()
 	plt.show()
 
-# one run for epsilon greedy and UCB algorithms
+# simulations for epsilon greedy and UCB algorithms
 def playBasic(policy, runs: int, T: int, numArms: int):
-	rewards = np.zeros((runs, T))
+	# rewards = np.zeros((runs, T))
 	regrets = np.zeros((runs, T))
 
 	for run in range(runs):
-		bandit = Bandit(np.random.normal(0, 1.0, numArms), np.full(numArms, 1.0))
-		for t in range(T):
-			rewards[run, t], regrets[run, t] = policy.step(bandit)
-		
-		policy.clear()
+		regrets[run] = playBasicRun(policy, T, numArms)
 
-	return np.mean(rewards, axis=0)
+	return np.cumsum(np.mean(regrets, axis=0))
+
+# one run for epsilon greedy and UCB
+def playBasicRun(policy, T: int, numArms: int):
+	bandit = Bandit(np.random.normal(0, 1.0, numArms), np.full(numArms, 1.0))
+	rew = np.zeros((T))
+	reg = np.zeros((T))
+
+	for t in range(T):
+		rew[t], reg[t] = policy.step(bandit)
+
+	policy.clear()
+
+	return reg
 
 def generateP(A, kappa):
 	dmax = np.max(np.sum(A, axis=0))
@@ -141,6 +156,8 @@ def runMultiAgent() -> None:
 		# # for agent-wise plot
 		# for i, r in enumerate(result):
 		# 	plt.plot(r, label=f'Agent {i + 1}')
+
+	print(f'Multi-agent simulations ended at {ctime(time())}')
 
 	plt.xlabel('Steps')
 	plt.ylabel('Average Regret')
