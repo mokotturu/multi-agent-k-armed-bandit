@@ -94,48 +94,48 @@ def runMultiAgent() -> None:
 	runs = 10000
 	T = 1000
 	networks = [
-		'Example Network 1',
-		'All-to-All',
-		'Ring',
-		'House',
-		'Line',
-		'Star'
+		# 'Example Network 1',
+		# 'All-to-All',
+		# 'Ring',
+		# 'House',
+		# 'Line',
+		'Star',
 	]
 	Amats = [
-		np.array([
-			[0, 1, 1, 1],
-			[1, 0, 1, 0],
-			[1, 1, 0, 0],
-			[1, 0, 0, 0],
-		]),
-		np.array([
-			[0, 1, 1, 1, 1],
-			[1, 0, 1, 1, 1],
-			[1, 1, 0, 1, 1],
-			[1, 1, 1, 0, 1],
-			[1, 1, 1, 1, 0],
-		]),
-		np.array([
-			[0, 1, 0, 0, 1],
-			[1, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 1],
-			[1, 0, 0, 1, 0],
-		]),
-		np.array([
-			[0, 1, 0, 0, 1],
-			[1, 0, 1, 0, 1],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 1],
-			[1, 1, 0, 1, 0],
-		]),
-		np.array([
-			[0, 1, 0, 0, 1],
-			[1, 0, 1, 0, 0],
-			[0, 1, 0, 0, 0],
-			[0, 0, 0, 0, 1],
-			[1, 0, 0, 1, 0],
-		]),
+		# np.array([
+		# 	[0, 1, 1, 1],
+		# 	[1, 0, 1, 0],
+		# 	[1, 1, 0, 0],
+		# 	[1, 0, 0, 0],
+		# ]),
+		# np.array([
+		# 	[0, 1, 1, 1, 1],
+		# 	[1, 0, 1, 1, 1],
+		# 	[1, 1, 0, 1, 1],
+		# 	[1, 1, 1, 0, 1],
+		# 	[1, 1, 1, 1, 0],
+		# ]),
+		# np.array([
+		# 	[0, 1, 0, 0, 1],
+		# 	[1, 0, 1, 0, 0],
+		# 	[0, 1, 0, 1, 0],
+		# 	[0, 0, 1, 0, 1],
+		# 	[1, 0, 0, 1, 0],
+		# ]),
+		# np.array([
+		# 	[0, 1, 0, 0, 1],
+		# 	[1, 0, 1, 0, 1],
+		# 	[0, 1, 0, 1, 0],
+		# 	[0, 0, 1, 0, 1],
+		# 	[1, 1, 0, 1, 0],
+		# ]),
+		# np.array([
+		# 	[0, 1, 0, 0, 1],
+		# 	[1, 0, 1, 0, 0],
+		# 	[0, 1, 0, 0, 0],
+		# 	[0, 0, 0, 0, 1],
+		# 	[1, 0, 0, 1, 0],
+		# ]),
 		np.array([
 			[0, 0, 1, 0, 0],
 			[0, 0, 1, 0, 0],
@@ -151,17 +151,22 @@ def runMultiAgent() -> None:
 		result = playMultiAgent(runs, T, numArms, A.shape[0], P)
 		print(f'finished {network}')
 
-		plt.plot(np.mean(result, axis=0), label=network)
+		fig, (agentplt, avgplt) = plt.subplots(2, 1, sharex=True, sharey=True)
 
-		# # for agent-wise plot
-		# for i, r in enumerate(result):
-		# 	plt.plot(r, label=f'Agent {i + 1}')
+		avgplt.plot(np.mean(result, axis=0), label=f'{network} agent average')
+
+		# for agent-wise plot
+		for i, r in enumerate(result):
+			agentplt.plot(r, label=f'Agent {i + 1}')
 
 	print(f'Multi-agent simulations ended at {ctime(time())}')
 
-	plt.xlabel('Steps')
-	plt.ylabel('Average Regret')
-	plt.legend()
+	agentplt.set_xlabel('Steps')
+	agentplt.set_ylabel('Average Regret')
+	avgplt.set_xlabel('Steps')
+	avgplt.set_ylabel('Average Regret')
+	agentplt.legend()
+	avgplt.legend()
 	plt.show()
 
 # one multi agent run
@@ -199,6 +204,11 @@ def playMultiAgentRun(T: int, N: int, M: int, P):
 
 				action = np.argmax(Q[k, :])
 				rew[k, action], reg[k, t] = bandit.act(action)
+
+				# retaliation step
+				if k == 2:
+					rew[k, action] *= 0.25
+
 				xsi[k, action] += 1
 
 		for i in range(N):
