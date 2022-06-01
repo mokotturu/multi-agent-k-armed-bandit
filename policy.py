@@ -29,7 +29,7 @@ class EpsilonGreedyPolicy(SuperPolicy):
 		arms = [i for i in range(self.numArms)]
 
 		arm_to_pull = np.argmax(self.Q) if np.random.rand() >= self.epsilon else np.random.choice(arms)
-		rew, reg = bandit.act(arm_to_pull)
+		rew, reg, _ = bandit.act(arm_to_pull)
 		
 		self.N[arm_to_pull] += 1
 		self.Q[arm_to_pull] += ((0.1) * (rew - self.Q[arm_to_pull]))
@@ -54,7 +54,7 @@ class UCBPolicy(SuperPolicy):
 	
 	def step(self, bandit: Bandit) -> tuple:
 		arm_to_pull = np.argmax(self.Q + 2 * (np.sqrt(np.log(np.sum(self.N) + 1) / (self.N + 1e-6))))
-		rew, reg = bandit.act(arm_to_pull)
+		rew, reg, _ = bandit.act(arm_to_pull)
 		
 		self.N[arm_to_pull] += 1
 		self.Q[arm_to_pull] += 0.1 * (rew - self.Q[arm_to_pull])

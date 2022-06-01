@@ -88,6 +88,19 @@ def generateP(A, kappa):
 	P = I - (kappa/dmax) * L
 	return P
 
+def colorGen():
+	while True:
+		yield 'red'
+		yield 'tab:blue'
+		yield 'tab:green'
+		yield 'tab:purple'
+		yield 'tab:orange'
+		yield 'tab:brown'
+		yield 'tab:pink'
+		yield 'tab:gray'
+		yield 'tab:olive'
+		yield 'tab:cyan'
+
 # run multi agent
 def runMultiAgent() -> None:
 	numArms = 10
@@ -96,10 +109,10 @@ def runMultiAgent() -> None:
 	networks = [
 		# 'Example Network 1',
 		# 'All-to-All',
-		# 'Ring',
+		'Ring',
 		# 'House',
 		# 'Line',
-		'Star',
+		# 'Star',
 	]
 	Amats = [
 		# np.array([
@@ -115,14 +128,14 @@ def runMultiAgent() -> None:
 		# 	[1, 1, 1, 0, 1],
 		# 	[1, 1, 1, 1, 0],
 		# ]),
-		# np.array([
-		# 	[0, 1, 0, 0, 1],
-		# 	[1, 0, 1, 0, 0],
-		# 	[0, 1, 0, 1, 0],
-		# 	[0, 0, 1, 0, 1],
-		# 	[1, 0, 0, 1, 0],
-		# ]),
-		# np.array([
+		np.array([
+			[0, 1, 0, 0, 1],
+			[1, 0, 1, 0, 0],
+			[0, 1, 0, 1, 0],
+			[0, 0, 1, 0, 1],
+			[1, 0, 0, 1, 0],
+		]),
+		# np.array([s
 		# 	[0, 1, 0, 0, 1],
 		# 	[1, 0, 1, 0, 1],
 		# 	[0, 1, 0, 1, 0],
@@ -136,41 +149,72 @@ def runMultiAgent() -> None:
 		# 	[0, 0, 0, 0, 1],
 		# 	[1, 0, 0, 1, 0],
 		# ]),
-		np.array([
-			[0, 0, 1, 0, 0],
-			[0, 0, 1, 0, 0],
-			[1, 1, 0, 1, 1],
-			[0, 0, 1, 0, 0],
-			[0, 0, 1, 0, 0],
-		]),
+		# np.array([
+		# 	[0, 0, 1, 0, 0],
+		# 	[0, 0, 1, 0, 0],
+		# 	[1, 1, 0, 1, 1],
+		# 	[0, 0, 1, 0, 0],
+		# 	[0, 0, 1, 0, 0],
+		# ]),
 	]
 	kappa = 0.02
 
 	for network, A in zip(networks, Amats):
-		P = generateP(A, kappa)
-		result = playMultiAgent(runs, T, numArms, A.shape[0], P)
-		print(f'finished {network}')
+		# PNormal = generateP(A, kappa)
+		PCustom = np.array([[0.7 , 0.15, 0   , 0   , 0.15],
+							[0.55, 0.3 , 0.15, 0   , 0   ],
+							[0   , 0.15, 0.7 , 0.15, 0   ],
+							[0   , 0   , 0.15, 0.7 , 0.15],
+							[0.55, 0   , 0   , 0.15, 0.3 ]])
+		resultNormal = playMultiAgent(runs, T, numArms, A.shape[0], PCustom, 0)
+		print(f'finished normal {network}')
+		resultFlip = playMultiAgent(runs, T, numArms, A.shape[0], PCustom, 1)
+		print(f'finished flip {network}')
+		resultNewNormal = playMultiAgent(runs, T, numArms, A.shape[0], PCustom, 2)
+		print(f'finished new normal {network}')
 
-		fig, (agentplt, avgplt) = plt.subplots(2, 1, sharex=True, sharey=True)
+		fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
 
-		avgplt.plot(np.mean(result, axis=0), label=f'{network} agent average')
+		ax1Colors = colorGen()
+		ax2Colors = colorGen()
+		ax3Colors = colorGen()
+		ax4Colors = colorGen()
 
-		# for agent-wise plot
-		for i, r in enumerate(result):
-			agentplt.plot(r, label=f'Agent {i + 1}')
+		ax1.set_title('Average network cumulative regret')
+
+		ax1.plot(np.mean(resultNormal, axis=0), label=f'Normal', color=next(ax1Colors))
+		ax1.plot(np.mean(resultFlip, axis=0), label=f'Flipped Reward', color=next(ax1Colors))
+		ax1.plot(np.mean(resultNewNormal, axis=0), label=f'Reward from N(-1 * reward, 1.0)', color=next(ax1Colors))
+
+		ax2.set_title('Agent wise cumulative regret: Normal')
+		for i, r in enumerate(resultNormal):
+			ax2.plot(r, label=f'Agent {i + 1}', color=next(ax2Colors))
+
+		ax3.set_title('Agent wise cumulative regret: Flipped reward')
+		for i, r in enumerate(resultFlip):
+			ax3.plot(r, label=f'Agent {i + 1}', color=next(ax3Colors))
+
+		ax4.set_title('Agent wise cumulative regret: Reward from N(-1 * reward, 1.0)')
+		for i, r in enumerate(resultNewNormal):
+			ax4.plot(r, label=f'Agent {i + 1}', color=next(ax4Colors))
 
 	print(f'Multi-agent simulations ended at {ctime(time())}')
 
-	agentplt.set_xlabel('Steps')
-	agentplt.set_ylabel('Average Regret')
-	avgplt.set_xlabel('Steps')
-	avgplt.set_ylabel('Average Regret')
-	agentplt.legend()
-	avgplt.legend()
+	ax1.legend()
+	ax2.legend()
+	ax3.legend()
+	ax4.legend()
+
+	ax1.grid()
+	ax2.grid()
+	ax3.grid()
+	ax4.grid()
+
+	plt.savefig('newfig.png')
 	plt.show()
 
 # one multi agent run
-def playMultiAgentRun(T: int, N: int, M: int, P):
+def playMultiAgentRun(T: int, N: int, M: int, P, malfunction):
 	sigma_g = 10
 	eta = 3.2		# try 2, 2.2
 	gamma = 2.9 	# try 1.9
@@ -191,7 +235,7 @@ def playMultiAgentRun(T: int, N: int, M: int, P):
 		if t < N:
 			for k in range(M):
 				action = t
-				rew[k, action], reg[k, action] = bandit.act(action)
+				rew[k, action], reg[k, action], _ = bandit.act(action)
 				xsi[k, action] += 1
 		else:
 			for k in range(M):
@@ -203,11 +247,12 @@ def playMultiAgentRun(T: int, N: int, M: int, P):
 					Q[k, i] = x1 + sigma_g * (np.sqrt(x2 * x3 * x4))
 
 				action = np.argmax(Q[k, :])
-				rew[k, action], reg[k, t] = bandit.act(action)
+				rew[k, action], reg[k, t], true_mean = bandit.act(action)
 
 				# retaliation step
-				if k == 2:
-					rew[k, action] *= 0.25
+				if k == 0:
+					if malfunction == 1: rew[k, action] *= -1
+					if malfunction == 2: rew[k, action] = np.random.normal(-1 * rew[k, action], 1.0)
 
 				xsi[k, action] += 1
 
@@ -228,10 +273,10 @@ def playMultiAgentRun(T: int, N: int, M: int, P):
 
 pools each run into separate processes for multiprocessing
 '''
-def playMultiAgent(runs: int, T: int, N: int, M: int, P):
+def playMultiAgent(runs: int, T: int, N: int, M: int, P, malfunction):
 	pool = Pool(cpu_count())
 
-	result_objs = [pool.apply_async(playMultiAgentRun, args=(T, N, M, P)) for run in range(runs)]
+	result_objs = [pool.apply_async(playMultiAgentRun, args=(T, N, M, P, malfunction)) for run in range(runs)]
 	results = np.array([r.get() for r in result_objs])
 
 	pool.close()

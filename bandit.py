@@ -18,4 +18,4 @@ class Bandit:
 	def act(self, k: int) -> tuple:
 		if k < 0 or k >= self.means.size:
 			raise ValueError(f'Invalid arm index. Received value: {k}')
-		return np.random.normal(self.means[k], self.sds[k]), np.max(self.means) - self.means[k]
+		return np.random.normal(self.means[k], self.sds[k]), np.max(self.means) - self.means[k], self.means[k]
