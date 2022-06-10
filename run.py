@@ -85,12 +85,15 @@ def generateP(A, kappa):
 	M, _ = np.shape(A)
 	I = np.eye(M)
 
-	P = I - (kappa/dmax) * L
+	P = I - (kappa/(dmax)) * L
 	return P
 
 def calcGraphEps(P):
 	M, _ = P.shape
-	eigvalarr = np.sort(np.linalg.eigvals(P))[:-1]
+	eigvalarr = np.sort(np.linalg.eigvals(P))
+
+	print(eigvalarr)
+	eigvalarr = eigvalarr[:-1]
 
 	temp = np.sqrt(M) * np.sum(np.abs(eigvalarr) / (1 - np.abs(eigvalarr)))
 
@@ -127,73 +130,34 @@ def runMultiAgent() -> None:
 	runs = 10000
 	T = 1000
 	networks = [
-		# 'Network 1',
-		# 'All-to-All',
-		# 'Ring',
+		'Network 1',
+		'All-to-All',
+		'Ring',
 		'House',
-		'Connected to 1',
-		'Connected to 2',
-		'Connected to 3',
-		'Connected to 4',
-		'Connected to 5',
-		# 'Line',
-		# 'Star'
+		'Line',
+		'Star'
 	]
 	Amats = [
-		# np.array([
-		# 	[0, 1, 1, 1],
-		# 	[1, 0, 1, 0],
-		# 	[1, 1, 0, 0],
-		# 	[1, 0, 0, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 1, 1, 1],
-		# 	[1, 0, 1, 0, 0],
-		# 	[1, 1, 0, 0, 0],
-		# 	[1, 0, 0, 0, 0],
-		# 	[1, 0, 0, 0, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 1, 1, 0],
-		# 	[1, 0, 1, 0, 1],
-		# 	[1, 1, 0, 0, 0],
-		# 	[1, 0, 0, 0, 0],
-		# 	[0, 1, 0, 0, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 1, 1, 0],
-		# 	[1, 0, 1, 0, 0],
-		# 	[1, 1, 0, 0, 1],
-		# 	[1, 0, 0, 0, 0],
-		# 	[0, 0, 1, 0, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 1, 1, 0],
-		# 	[1, 0, 1, 0, 0],
-		# 	[1, 1, 0, 0, 0],
-		# 	[1, 0, 0, 0, 1],
-		# 	[0, 0, 0, 1, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 1, 1],
-		# 	[1, 0, 1, 0],
-		# 	[1, 1, 0, 0],
-		# 	[1, 0, 0, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 1, 1, 1],
-		# 	[1, 0, 1, 1, 1],
-		# 	[1, 1, 0, 1, 1],
-		# 	[1, 1, 1, 0, 1],
-		# 	[1, 1, 1, 1, 0],
-		# ]),
-		# np.array([
-		# 	[0, 1, 0, 0, 1],
-		# 	[1, 0, 1, 0, 0],
-		# 	[0, 1, 0, 1, 0],
-		# 	[0, 0, 1, 0, 1],
-		# 	[1, 0, 0, 1, 0],
-		# ]),
+		np.array([
+			[0, 1, 1, 1],
+			[1, 0, 1, 0],
+			[1, 1, 0, 0],
+			[1, 0, 0, 0],
+		]),
+		np.array([
+			[0, 1, 1, 1, 1],
+			[1, 0, 1, 1, 1],
+			[1, 1, 0, 1, 1],
+			[1, 1, 1, 0, 1],
+			[1, 1, 1, 1, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1],
+			[1, 0, 1, 0, 0],
+			[0, 1, 0, 1, 0],
+			[0, 0, 1, 0, 1],
+			[1, 0, 0, 1, 0],
+		]),
 		np.array([
 			[0, 1, 0, 0, 1],
 			[1, 0, 1, 0, 1],
@@ -202,72 +166,33 @@ def runMultiAgent() -> None:
 			[1, 1, 0, 1, 0],
 		]),
 		np.array([
-			[0, 1, 0, 0, 1, 1],
-			[1, 0, 1, 0, 1, 0],
-			[0, 1, 0, 1, 0, 0],
-			[0, 0, 1, 0, 1, 0],
-			[1, 1, 0, 1, 0, 0],
-			[1, 0, 0, 0, 0, 0],
+			[0, 1, 0, 0, 1],
+			[1, 0, 1, 0, 0],
+			[0, 1, 0, 0, 0],
+			[0, 0, 0, 0, 1],
+			[1, 0, 0, 1, 0],
 		]),
 		np.array([
-			[0, 1, 0, 0, 1, 0],
-			[1, 0, 1, 0, 1, 1],
-			[0, 1, 0, 1, 0, 0],
-			[0, 0, 1, 0, 1, 0],
-			[1, 1, 0, 1, 0, 0],
-			[0, 1, 0, 0, 0, 0],
+			[0, 0, 1, 0, 0],
+			[0, 0, 1, 0, 0],
+			[1, 1, 0, 1, 1],
+			[0, 0, 1, 0, 0],
+			[0, 0, 1, 0, 0],
 		]),
-		np.array([
-			[0, 1, 0, 0, 1, 0],
-			[1, 0, 1, 0, 1, 0],
-			[0, 1, 0, 1, 0, 1],
-			[0, 0, 1, 0, 1, 0],
-			[1, 1, 0, 1, 0, 0],
-			[0, 0, 1, 0, 0, 0],
-		]),
-		np.array([
-			[0, 1, 0, 0, 1, 0],
-			[1, 0, 1, 0, 1, 0],
-			[0, 1, 0, 1, 0, 0],
-			[0, 0, 1, 0, 1, 1],
-			[1, 1, 0, 1, 0, 0],
-			[0, 0, 0, 1, 0, 0],
-		]),
-		np.array([
-			[0, 1, 0, 0, 1, 0],
-			[1, 0, 1, 0, 1, 0],
-			[0, 1, 0, 1, 0, 0],
-			[0, 0, 1, 0, 1, 0],
-			[1, 1, 0, 1, 0, 1],
-			[0, 0, 0, 0, 1, 0],
-		]),
-		# np.array([
-		# 	[0, 1, 0, 0, 1],
-		# 	[1, 0, 1, 0, 0],
-		# 	[0, 1, 0, 0, 0],
-		# 	[0, 0, 0, 0, 1],
-		# 	[1, 0, 0, 1, 0],
-		# ]),
-		# np.array([
-		# 	[0, 0, 1, 0, 0],
-		# 	[0, 0, 1, 0, 0],
-		# 	[1, 1, 0, 1, 1],
-		# 	[0, 0, 1, 0, 0],
-		# 	[0, 0, 1, 0, 0],
-		# ]),
 	]
 	kappa = 0.02
 	teamColors = colorGen()
 
 	for network, A in zip(networks, Amats):
 		P = generateP(A, kappa)
-		# eps = calcGraphEps(P)
-		result = playMultiAgent(runs, T, numArms, A.shape[0], P)
+		eps = calcGraphEps(P)
+		print(eps)
+		# result = playMultiAgent(runs, T, numArms, A.shape[0], P)
 		# print(f'eps {network}:\t{eps}')
 
 		# agentColors = colorGen()
-		plt.plot(np.mean(result, axis=0), label=network, color=next(teamColors))
-		print(f'finished {network} at {ctime(time())}')
+		# plt.plot(np.mean(result, axis=0), label=network, color=next(teamColors))
+		# print(f'finished {network} at {ctime(time())}')
 
 
 		# # for agent-wise plot
@@ -276,11 +201,11 @@ def runMultiAgent() -> None:
 
 	print(f'Multi-agent simulations ended at {ctime(time())}')
 
-	plt.xlabel('Steps')
-	plt.ylabel('Average Regret')
-	plt.legend()
-	plt.savefig('new_fig.png')
-	plt.show()
+	# plt.xlabel('Steps')
+	# plt.ylabel('Average Regret')
+	# plt.legend()
+	# plt.savefig('new_fig.png')
+	# plt.show()
 
 # one multi agent run
 def playMultiAgentRun(T: int, N: int, M: int, P):
