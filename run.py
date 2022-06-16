@@ -109,8 +109,13 @@ def runMultiAgent() -> None:
 	networks = [
 		# 'Example Network 1',
 		# 'All-to-All',
-		'Ring',
-		# 'House',
+		# 'Ring',
+		'House: Not connected',
+		'House: Connected to Agent 1',
+		'House: Connected to Agent 2',
+		'House: Connected to Agent 3',
+		'House: Connected to Agent 4',
+		'House: Connected to Agent 5',
 		# 'Line',
 		# 'Star',
 	]
@@ -128,20 +133,60 @@ def runMultiAgent() -> None:
 		# 	[1, 1, 1, 0, 1],
 		# 	[1, 1, 1, 1, 0],
 		# ]),
-		np.array([
-			[0, 1, 0, 0, 1],
-			[1, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 1],
-			[1, 0, 0, 1, 0],
-		]),
-		# np.array([s
+		# np.array([
 		# 	[0, 1, 0, 0, 1],
-		# 	[1, 0, 1, 0, 1],
+		# 	[1, 0, 1, 0, 0],
 		# 	[0, 1, 0, 1, 0],
 		# 	[0, 0, 1, 0, 1],
-		# 	[1, 1, 0, 1, 0],
+		# 	[1, 0, 0, 1, 0],
 		# ]),
+		np.array([
+			[0, 1, 0, 0, 1],
+			[1, 0, 1, 0, 1],
+			[0, 1, 0, 1, 0],
+			[0, 0, 1, 0, 1],
+			[1, 1, 0, 1, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1, 1],
+			[1, 0, 1, 0, 1, 0],
+			[0, 1, 0, 1, 0, 0],
+			[0, 0, 1, 0, 1, 0],
+			[1, 1, 0, 1, 0, 0],
+			[1, 0, 0, 0, 0, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1, 0],
+			[1, 0, 1, 0, 1, 1],
+			[0, 1, 0, 1, 0, 0],
+			[0, 0, 1, 0, 1, 0],
+			[1, 1, 0, 1, 0, 0],
+			[0, 1, 0, 0, 0, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1, 0],
+			[1, 0, 1, 0, 1, 0],
+			[0, 1, 0, 1, 0, 1],
+			[0, 0, 1, 0, 1, 0],
+			[1, 1, 0, 1, 0, 0],
+			[0, 0, 1, 0, 0, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1, 0],
+			[1, 0, 1, 0, 1, 0],
+			[0, 1, 0, 1, 0, 0],
+			[0, 0, 1, 0, 1, 1],
+			[1, 1, 0, 1, 0, 0],
+			[0, 0, 0, 1, 0, 0],
+		]),
+		np.array([
+			[0, 1, 0, 0, 1, 0],
+			[1, 0, 1, 0, 1, 0],
+			[0, 1, 0, 1, 0, 0],
+			[0, 0, 1, 0, 1, 0],
+			[1, 1, 0, 1, 0, 1],
+			[0, 0, 0, 0, 1, 0],
+		]),
 		# np.array([
 		# 	[0, 1, 0, 0, 1],
 		# 	[1, 0, 1, 0, 0],
@@ -157,64 +202,89 @@ def runMultiAgent() -> None:
 		# 	[0, 0, 1, 0, 0],
 		# ]),
 	]
+	plotTitles = np.array([
+		'Team Average Cumulative Regret: No Agent 6',
+		'Team Average Cumulative Regret: Connected to Agent 1',
+		'Team Average Cumulative Regret: Connected to Agent 2',
+		'Team Average Cumulative Regret: Connected to Agent 3',
+		'Team Average Cumulative Regret: Connected to Agent 4',
+		'Team Average Cumulative Regret: Connected to Agent 5',
+	])
+	graphLabels = np.array([
+		'No Faulty Agent',
+		'Faulty Agent 1',
+		'Faulty Agent 2',
+		'Faulty Agent 3',
+		'Faulty Agent 4',
+		'Faulty Agent 5',
+	])
+
 	kappa = 0.02
+	rows, cols = 3, 2
+	fig, ax = plt.subplots(rows, cols, sharey=True)
+	ax = ax.reshape(rows * cols)
 
-	for network, A in zip(networks, Amats):
-		# PNormal = generateP(A, kappa)
-		PCustom = np.array([[0.7 , 0.15, 0   , 0   , 0.15],
-							[0.55, 0.3 , 0.15, 0   , 0   ],
-							[0   , 0.15, 0.7 , 0.15, 0   ],
-							[0   , 0   , 0.15, 0.7 , 0.15],
-							[0.55, 0   , 0   , 0.15, 0.3 ]])
-		resultNormal = playMultiAgent(runs, T, numArms, A.shape[0], PCustom, 0)
-		print(f'finished normal {network}')
-		resultFlip = playMultiAgent(runs, T, numArms, A.shape[0], PCustom, 1)
-		print(f'finished flip {network}')
-		resultNewNormal = playMultiAgent(runs, T, numArms, A.shape[0], PCustom, 2)
-		print(f'finished new normal {network}')
+	for networkCounter, (network, A) in enumerate(zip(networks, Amats)):
+		P = generateP(A, kappa)
+		# PCustom = np.array([[0.7 , 0.15, 0   , 0   , 0.15],
+		# 					[0.55, 0.3 , 0.15, 0   , 0   ],
+		# 					[0   , 0.15, 0.7 , 0.15, 0   ],
+		# 					[0   , 0   , 0.15, 0.7 , 0.15],
+		# 					[0.55, 0   , 0   , 0.15, 0.3 ]])
 
-		fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+		cases = 6
+		results = []
+		axColors = colorGen()
+		
+		M, _ = A.shape
 
-		ax1Colors = colorGen()
-		ax2Colors = colorGen()
-		ax3Colors = colorGen()
-		ax4Colors = colorGen()
+		for i in range(cases):
+			results.append(playMultiAgent(runs, T, numArms, M, P, 2, i - 1))
+			print(f'finished {network} - {i} at {ctime(time())}')
+		
+		results = np.array(results)
 
-		ax1.set_title('Average network cumulative regret')
+		for i, result in enumerate(results):
+			ax[networkCounter].plot(np.mean(result, axis=0), label=graphLabels[i], color=next(axColors))
+		
+		# ax1.set_title('Agent wise cumulative regret: No Faulty Agent')
+		# for i, r in enumerate(result1):
+		# 	ax1.plot(r, label=f'Agent {i + 1}', color=next(ax1Colors))
 
-		ax1.plot(np.mean(resultNormal, axis=0), label=f'Normal', color=next(ax1Colors))
-		ax1.plot(np.mean(resultFlip, axis=0), label=f'Flipped Reward', color=next(ax1Colors))
-		ax1.plot(np.mean(resultNewNormal, axis=0), label=f'Reward from N(-1 * reward, 1.0)', color=next(ax1Colors))
+		# ax2.set_title('Agent wise cumulative regret: Faulty Agent 1')
+		# for i, r in enumerate(result2):
+		# 	ax2.plot(r, label=f'Agent {i + 1}', color=next(ax2Colors))
 
-		ax2.set_title('Agent wise cumulative regret: Normal')
-		for i, r in enumerate(resultNormal):
-			ax2.plot(r, label=f'Agent {i + 1}', color=next(ax2Colors))
+		# ax3.set_title('Agent wise cumulative regret: Faulty Agent 2')
+		# for i, r in enumerate(result3):
+		# 	ax3.plot(r, label=f'Agent {i + 1}', color=next(ax3Colors))
 
-		ax3.set_title('Agent wise cumulative regret: Flipped reward')
-		for i, r in enumerate(resultFlip):
-			ax3.plot(r, label=f'Agent {i + 1}', color=next(ax3Colors))
+		# ax4.set_title('Agent wise cumulative regret: Faulty Agent 3')
+		# for i, r in enumerate(result4):
+		# 	ax4.plot(r, label=f'Agent {i + 1}', color=next(ax4Colors))
 
-		ax4.set_title('Agent wise cumulative regret: Reward from N(-1 * reward, 1.0)')
-		for i, r in enumerate(resultNewNormal):
-			ax4.plot(r, label=f'Agent {i + 1}', color=next(ax4Colors))
+		# ax5.set_title('Agent wise cumulative regret: Faulty Agent 4')
+		# for i, r in enumerate(result5):
+		# 	ax5.plot(r, label=f'Agent {i + 1}', color=next(ax5Colors))
+
+		# ax6.set_title('Agent wise cumulative regret: Faulty Agent 5')
+		# for i, r in enumerate(result6):
+		# 	ax6.plot(r, label=f'Agent {i + 1}', color=next(ax6Colors))
 
 	print(f'Multi-agent simulations ended at {ctime(time())}')
 
-	ax1.legend()
-	ax2.legend()
-	ax3.legend()
-	ax4.legend()
+	for i in range(len(ax)):
+		ax[i].set_title(plotTitles[i])
+		ax[i].legend()
+		ax[i].grid()
+		ax[i].tick_params(labelbottom=True, labelleft=True)
 
-	ax1.grid()
-	ax2.grid()
-	ax3.grid()
-	ax4.grid()
-
+	fig.set_size_inches(15, 12)
 	plt.savefig('newfig.png')
 	plt.show()
 
 # one multi agent run
-def playMultiAgentRun(T: int, N: int, M: int, P, malfunction):
+def playMultiAgentRun(T: int, N: int, M: int, P, malfunction, badAgent):
 	sigma_g = 10
 	eta = 3.2		# try 2, 2.2
 	gamma = 2.9 	# try 1.9
@@ -250,7 +320,7 @@ def playMultiAgentRun(T: int, N: int, M: int, P, malfunction):
 				rew[k, action], reg[k, t], true_mean = bandit.act(action)
 
 				# retaliation step
-				if k == 0:
+				if k == badAgent:
 					if malfunction == 1: rew[k, action] *= -1
 					if malfunction == 2: rew[k, action] = np.random.normal(-1 * rew[k, action], 1.0)
 
@@ -273,10 +343,10 @@ def playMultiAgentRun(T: int, N: int, M: int, P, malfunction):
 
 pools each run into separate processes for multiprocessing
 '''
-def playMultiAgent(runs: int, T: int, N: int, M: int, P, malfunction):
+def playMultiAgent(runs: int, T: int, N: int, M: int, P, malfunction, badAgent):
 	pool = Pool(cpu_count())
 
-	result_objs = [pool.apply_async(playMultiAgentRun, args=(T, N, M, P, malfunction)) for run in range(runs)]
+	result_objs = [pool.apply_async(playMultiAgentRun, args=(T, N, M, P, malfunction, badAgent)) for run in range(runs)]
 	results = np.array([r.get() for r in result_objs])
 
 	pool.close()
