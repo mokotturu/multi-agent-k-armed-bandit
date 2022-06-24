@@ -19,3 +19,6 @@ class Bandit:
 		if k < 0 or k >= self.means.size:
 			raise ValueError(f'Invalid arm index. Received value: {k}')
 		return np.random.normal(self.means[k], self.sds[k]), np.max(self.means) - self.means[k], self.means[k]
+	
+	def __str__(self):
+		return f'Means: {self.means}, Standard Deviances: {self.sds}'
