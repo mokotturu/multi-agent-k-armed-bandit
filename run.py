@@ -1,4 +1,3 @@
-import math
 from multiprocessing import Pool, cpu_count
 from time import ctime, time
 
@@ -103,169 +102,119 @@ def colorGen():
 		yield 'tab:olive'
 		yield 'tab:cyan'
 
+def solidLineStyleGen():
+	yield 'r-'
+	yield 'g-'
+	yield 'b-'
+	yield 'k-'
+	yield 'c-'
+	yield 'y-'
+
+def dottedLineStyleGen():
+	yield 'r:'
+	yield 'g:'
+	yield 'b:'
+	yield 'k:'
+	yield 'c:'
+	yield 'y:'
+
 # run multi agent
 def runMultiAgent() -> None:
-	numArms = 30
-	runs = 10000
+	numArms = 10
+	runs = 1000
 	T = 500
-	network = 'Five Agent Ring'
 	A = np.array([
+		[0, 1, 1, 0, 0],
+		[1, 0, 1, 1, 0],
+		[1, 1, 0, 0, 1],
 		[0, 1, 0, 0, 1],
-		[1, 0, 1, 0, 0],
-		[0, 1, 0, 1, 0],
-		[0, 0, 1, 0, 1],
-		[1, 0, 0, 1, 0],
+		[0, 0, 1, 1, 0],
 	])
 	kappa = 0.02
-	M = 10
 
 	# to show the difference in areas under the cumulative regret graphs with different P matrices
 	PLabels = [
-		'Max degree - healthy',
-		'Fastest averaging weights - healthy',
-		'Metropolis-Hastings weights - healthy',
-		'FDLA weights - healthy',
-		'Max degree - faulty',
-		'Fastest averaging weights - faulty',
-		'Metropolis-Hastings weights - faulty',
-		'FDLA weights - faulty',
+		'Kappa = 0.02',
+		# 'Max degree and Fastest Averaging Constant Weights',
+		# 'Metropolis-Hastings Weights',
+		# 'FDLA Weights',
+		# 'LMSC',
 	]
 	PMats = [
-		np.array([
-			[0.        , 0.33333333, 0.        , 0.        , 0.33333333, 0.33333333, 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.        , 0.33333333, 0.        , 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.        , 0.33333333, 0.33333333, 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.        , 0.        , 0.33333333, 0.33333333, 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.33333333, 0.        , 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.        , 0.        , 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.        , 0.33333333, 0.        , 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.33333333, 0.33333333, 0.        ],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.33333333, 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.33333333, 0.        , 0.33333333, 0.        ],
-		]),
-		np.array([
-			[-0.2,  0.4,  0. ,  0. ,  0.4,  0.4,  0. ,  0. ,  0. ,  0. ],
-			[ 0.4, -0.2,  0.4,  0. ,  0.4,  0. ,  0. ,  0. ,  0. ,  0. ],
-			[ 0. ,  0.4,  0.2,  0.4,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-			[ 0. ,  0. ,  0.4,  0.2,  0.4,  0. ,  0. ,  0. ,  0. ,  0. ],
-			[ 0.4,  0.4,  0. ,  0.4, -0.2,  0. ,  0. ,  0. ,  0. ,  0. ],
-			[ 0.4,  0. ,  0. ,  0. ,  0. , -0.2,  0.4,  0. ,  0. ,  0.4],
-			[ 0. ,  0. ,  0. ,  0. ,  0. ,  0.4, -0.2,  0.4,  0. ,  0.4],
-			[ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0.4,  0.2,  0.4,  0. ],
-			[ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0.4,  0.2,  0.4],
-			[ 0. ,  0. ,  0. ,  0. ,  0. ,  0.4,  0.4,  0. ,  0.4, -0.2],
-		]),
-		np.array([
-			[0.        , 0.33333333, 0.        , 0.        , 0.33333333, 0.33333333, 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.        , 0.33333333, 0.        , 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.        , 0.33333333, 0.16666667, 0.5       , 0.        , 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.        , 0.        , 0.5       , 0.16666667, 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.33333333, 0.        , 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.        , 0.        , 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.        , 0.33333333, 0.        , 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.16666667, 0.5       , 0.        ],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.5       , 0.16666667, 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.33333333, 0.        , 0.33333333, 0.        ],
-		]),
-		np.array([
-			[-0.16666834, 0.33333448, 0.        , 0.        , 0.33333448,  0.49999938, 0.        , 0.        , 0.        , 0.        ],
-			[ 0.33333448, 0.08333778, 0.49998868, 0.        , 0.08333907,  0.        , 0.        , 0.        , 0.        , 0.        ],
-			[ 0.        , 0.49998868, 0.25000496, 0.25000637, 0.        ,  0.        , 0.        , 0.        , 0.        , 0.        ],
-			[ 0.        , 0.        , 0.25000637, 0.25000496, 0.49998868,  0.        , 0.        , 0.        , 0.        , 0.        ],
-			[ 0.33333448, 0.08333907, 0.        , 0.49998868, 0.08333778,  0.        , 0.        , 0.        , 0.        , 0.        ],
-			[ 0.49999938, 0.        , 0.        , 0.        , 0.        , -0.16666834, 0.33333448, 0.        , 0.        , 0.33333448],
-			[ 0.        , 0.        , 0.        , 0.        , 0.        ,  0.33333448, 0.08333778, 0.49998868, 0.        , 0.08333907],
-			[ 0.        , 0.        , 0.        , 0.        , 0.        ,  0.        , 0.49998868, 0.25000496, 0.25000637, 0.        ],
-			[ 0.        , 0.        , 0.        , 0.        , 0.        ,  0.        , 0.        , 0.25000637, 0.25000496, 0.49998868],
-			[ 0.        , 0.        , 0.        , 0.        , 0.        ,  0.33333448, 0.08333907, 0.        , 0.49998868, 0.08333778]
-		]),
-		np.array([
-			[0.        , 0.33333333, 0.        , 0.        , 0.33333333, 0.33333333, 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.        , 0.33333333, 0.        , 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.        , 0.33333333, 0.33333333, 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.        , 0.        , 0.33333333, 0.33333333, 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.33333333, 0.        , 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.        , 0.        , 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.        , 0.33333333, 0.        , 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.33333333, 0.33333333, 0.        ],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.33333333, 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.33333333, 0.        , 0.33333333, 0.        ],
-		]),
-		np.array([
-			[-0.2,  0.4,  0. ,  0. ,  0.4,  0.4,  0. ,  0. ,  0. ,  0. ],
-			[ 0.4, -0.2,  0.4,  0. ,  0.4,  0. ,  0. ,  0. ,  0. ,  0. ],
-			[ 0. ,  0.4,  0.2,  0.4,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-			[ 0. ,  0. ,  0.4,  0.2,  0.4,  0. ,  0. ,  0. ,  0. ,  0. ],
-			[ 0.4,  0.4,  0. ,  0.4, -0.2,  0. ,  0. ,  0. ,  0. ,  0. ],
-			[ 0.4,  0. ,  0. ,  0. ,  0. , -0.2,  0.4,  0. ,  0. ,  0.4],
-			[ 0. ,  0. ,  0. ,  0. ,  0. ,  0.4, -0.2,  0.4,  0. ,  0.4],
-			[ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0.4,  0.2,  0.4,  0. ],
-			[ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0.4,  0.2,  0.4],
-			[ 0. ,  0. ,  0. ,  0. ,  0. ,  0.4,  0.4,  0. ,  0.4, -0.2],
-		]),
-		np.array([
-			[0.        , 0.33333333, 0.        , 0.        , 0.33333333, 0.33333333, 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.        , 0.33333333, 0.        , 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.        , 0.33333333, 0.16666667, 0.5       , 0.        , 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.        , 0.        , 0.5       , 0.16666667, 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.33333333, 0.        , 0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.        ],
-			[0.33333333, 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.        , 0.        , 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.        , 0.33333333, 0.        , 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.16666667, 0.5       , 0.        ],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.        , 0.5       , 0.16666667, 0.33333333],
-			[0.        , 0.        , 0.        , 0.        , 0.        , 0.33333333, 0.33333333, 0.        , 0.33333333, 0.        ],
-		]),
-		np.array([
-			[-0.16666834, 0.33333448, 0.        , 0.        , 0.33333448,  0.49999938, 0.        , 0.        , 0.        , 0.        ],
-			[ 0.33333448, 0.08333778, 0.49998868, 0.        , 0.08333907,  0.        , 0.        , 0.        , 0.        , 0.        ],
-			[ 0.        , 0.49998868, 0.25000496, 0.25000637, 0.        ,  0.        , 0.        , 0.        , 0.        , 0.        ],
-			[ 0.        , 0.        , 0.25000637, 0.25000496, 0.49998868,  0.        , 0.        , 0.        , 0.        , 0.        ],
-			[ 0.33333448, 0.08333907, 0.        , 0.49998868, 0.08333778,  0.        , 0.        , 0.        , 0.        , 0.        ],
-			[ 0.49999938, 0.        , 0.        , 0.        , 0.        , -0.16666834, 0.33333448, 0.        , 0.        , 0.33333448],
-			[ 0.        , 0.        , 0.        , 0.        , 0.        ,  0.33333448, 0.08333778, 0.49998868, 0.        , 0.08333907],
-			[ 0.        , 0.        , 0.        , 0.        , 0.        ,  0.        , 0.49998868, 0.25000496, 0.25000637, 0.        ],
-			[ 0.        , 0.        , 0.        , 0.        , 0.        ,  0.        , 0.        , 0.25000637, 0.25000496, 0.49998868],
-			[ 0.        , 0.        , 0.        , 0.        , 0.        ,  0.33333448, 0.08333907, 0.        , 0.49998868, 0.08333778]
-		]),
+		generateP(A, kappa),
+		# np.array([
+		# 	[0.33333333, 0.33333333, 0.33333333, 0.        , 0.        ],
+		# 	[0.33333333, 0.        , 0.33333333, 0.33333333, 0.        ],
+		# 	[0.33333333, 0.33333333, 0.        , 0.        , 0.33333333],
+		# 	[0.        , 0.33333333, 0.        , 0.33333333, 0.33333333],
+		# 	[0.        , 0.        , 0.33333333, 0.33333333, 0.33333333],
+		# ]),
+		# np.array([
+		# 	[0.33333333, 0.33333333, 0.33333333, 0.        , 0.        ],
+		# 	[0.33333333, 0.        , 0.33333333, 0.33333333, 0.        ],
+		# 	[0.33333333, 0.33333333, 0.        , 0.        , 0.33333333],
+		# 	[0.        , 0.33333333, 0.        , 0.16666667, 0.5       ],
+		# 	[0.        , 0.        , 0.33333333, 0.5       , 0.16666667],
+		# ]),
+		# np.array([
+		# 	[0.23809522, 0.38095239, 0.38095239, 0.        , 0.        ],
+		# 	[0.38095239, 0.0952381 , 0.0952381 , 0.42857142, 0.        ],
+		# 	[0.38095239, 0.0952381 , 0.0952381 , 0.        , 0.42857142],
+		# 	[0.        , 0.42857142, 0.        , 0.28571429, 0.28571429],
+		# 	[0.        , 0.        , 0.42857142, 0.28571429, 0.28571429],
+		# ]),
+		# np.array([
+		# 	[0.36161435, 0.31919283, 0.31919283, 0.        , 0.        ],
+		# 	[0.31919283, 0.17267105, 0.17267102, 0.33546511, 0.        ],
+		# 	[0.31919283, 0.17267102, 0.17267105, 0.        , 0.33546511],
+		# 	[0.        , 0.33546511, 0.        , 0.33226746, 0.33226743],
+		# 	[0.        , 0.        , 0.33546511, 0.33226743, 0.33226746],
+		# ]),
 	]
-	malfunctions = np.array([
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[1, 0],
-		[1, 0],
-		[1, 0],
-		[1, 0],
-	])
-	linestyles = np.array(['r-', 'g-', 'b-', 'm-', 'r--', 'g--', 'b--', 'm--'])
-	
+	M, _ = PMats[0].shape
+
+	solidLineStyle = solidLineStyleGen()
+	dottedLineStyle = dottedLineStyleGen()
+
 	plt.rc('font', size=22)
 	plt.rc('axes', titlesize=22, labelsize=22)
 	plt.rc('xtick', labelsize=22)
 	plt.rc('ytick', labelsize=22)
 
-	outfileName = 'sim_data_connected_houses.txt'
-	infileName = ''
-
-	with open(outfileName, 'w') as outfile:
+	fileName = 'sim_data_houses_comparison.txt'
+	with open(fileName, 'w') as outfile:
 		outfile.write('')
 
-	for i, (label, P) in enumerate(zip(PLabels, PMats)):
-		res = playMultiAgent(P, P, runs, T, numArms, M, malfunctions[i][0], malfunctions[i][1])
-		with open(outfileName, 'a') as outfile:
-			outfile.write(str(res) + '\n')
-		plt.plot(res, linestyles[i], label=label)
-		print(f'+1 {ctime(time())}')
+	for type in ['healthy', 'faulty']:
+		for i, (label, P) in enumerate(zip(PLabels, PMats)):
+			malfunctions = [-1, -1] if type == 'healthy' else [0, 4]
+			res = playMultiAgent(P, P, runs, T, numArms, M, malfunctions[0], malfunctions[1])
+			with open(fileName, 'a') as outfile:
+				outfile.write(str(res) + '\n')
+			plt.plot(
+				res,
+				next(solidLineStyle) if type == 'healthy' else next(dottedLineStyle),
+				label=f'{label} - {type}',
+				lw=3,
+			)
+			print(f'+1 {ctime(time())}')
 
-	# with open(infileName, 'r') as infile:
-	# 	for i, (label, P) in enumerate(zip(PLabels, PMats)):
-	# 		arr = np.array([float(x) for x in next(infile).strip().split()])
-	# 		plt.plot(arr, linestyles[i], label=label)
+	# with open(fileName, 'r') as infile:
+	# 	for type in ['healthy', 'faulty']:
+	# 		for i, (label, P) in enumerate(zip(PLabels, PMats)):
+	# 			arr = np.array([float(x) for x in next(infile).strip().split()])
+	# 			plt.plot(
+	# 				arr,
+	# 				next(solidLineStyle) if type == 'healthy' else next(dottedLineStyle),
+	# 				label=label,
+	# 				lw=3
+	# 			)
 
 	print(f'Simulations ended at {ctime(time())}')
 	plt.xlabel('Timesteps')
-	plt.ylabel('Average cumulative reward')
+	plt.ylabel('Average cumulative regret')
+	plt.title('House Network')
+	# plt.yscale('log')
 	plt.legend()
 	plt.grid()
 	plt.show()
@@ -326,61 +275,60 @@ def runMultiAgent() -> None:
 	# plt.show()
 
 # one multi agent run
-def playMultiAgentRun(P: np.ndarray, T: int, N: int, M: int, bandit: np.ndarray, malfunction: int, badAgent: int) -> float:
-	sigma_g = 10
-	eta = 3.2		# try 2, 2.2
-	gamma = 2.9 	# try 1.9
-	f = lambda t : math.sqrt(t)
-	G = lambda eta : 1 - (eta ** 2)/16
+def playMultiAgentRun(P: np.ndarray, T: int, N: int, M: int, bandit: Bandit, malfunction: int, badAgent: int) -> float:
+	sigma_g = 1		# try 10
+	eta = 3.2		# try 2, 2.2, 3.2
+	gamma = 2.9 	# try 1.9, 2.9
+	f = lambda t : np.sqrt(np.log(t))
+	G = 1 - (eta ** 2)/16
 
 	n = np.zeros((M, N))	# number of times an arm has been selected by each agent
 	s = np.zeros((M, N))	# cumulative expected reward
 	xsi = np.zeros((M, N))	# number of times that arm has been selected in that timestep
 	rew = np.zeros((M, N))	# reward
 	reg = np.zeros((M, T))	# regret
-
 	Q = np.zeros((M, N))
-
-	# bandit = Bandit(np.random.normal(0, 1.0, N), np.full(N, 1.0))
 
 	for t in range(T):
 		if t < N:
 			for k in range(M):
 				action = t
-				rew[k, action], reg[k, action], _ = bandit.act(action)
+				rew[k, action], reg[k, t], _ = bandit.act(action)
 				xsi[k, action] += 1
 		else:
 			for k in range(M):
 				for i in range(N):
 					x1 = s[k, i]/n[k, i]
-					x2 = 2 * gamma/G(eta)
+					x2 = 2 * gamma/G
 					x3 = (n[k, i] + f(t - 1))/(M * n[k, i])
 					x4 = np.log(t - 1)/n[k, i]
 					Q[k, i] = x1 + sigma_g * (np.sqrt(x2 * x3 * x4))
+					# Q[k, i] = (s[k, i] / n[k, i]) + sigma_g * ((2 * gamma * (n[k, i] + f(t - 1)) * np.log(t - 1)) / (G * M * n[k, i] * n[k, i]))
+
+				xsi[k, :] = np.zeros(N)
+				rew[k, :] = np.zeros(N)
 
 				action = np.argmax(Q[k, :])
+				xsi[k, action] = 1
 				rew[k, action], reg[k, t], _ = bandit.act(action)
 
-				# retaliation step
+				# faulty step
 				if k == badAgent:
-					if malfunction == 1: rew[k, action] *= -1
-					if malfunction == 2: rew[k, action] = np.random.normal(-1 * rew[k, action], 1.0)
+					if malfunction == 0: rew[k, action] *= -1 * np.abs(np.random.normal(0, 1))
+					if malfunction == 1: rew[k, action] = np.random.normal(-1 * rew[k, action], 1.0)
 
-				xsi[k, action] += 1
-
+		# update estimates using running consensus
 		for i in range(N):
 			n[:, i] = P @ (n[:, i] + xsi[:, i])
 			s[:, i] = P @ (s[:, i] + rew[:, i])
 
-		xsi = np.zeros((M, N))
-
 	return reg
 
 def genBandits(N: int, runs: int) -> np.ndarray:
-	with open('bandits.txt') as infile:
-		mylist = [Bandit(np.array([float(x) for x in next(infile).split()[:N]], dtype=np.longdouble), np.ones(N)) for run in range(runs)]
+	with open('bandits_10.txt') as infile:
+		banditsList = [Bandit(np.array([float(x) for x in next(infile).split()[:N]], dtype=np.longdouble), np.full(N, 30)) for run in range(runs)]
 	
-	return mylist
+	return banditsList
 
 def convertP(P: np.ndarray, originalP: np.ndarray):
 	M, _ = originalP.shape
@@ -395,15 +343,6 @@ def convertP(P: np.ndarray, originalP: np.ndarray):
 
 	return newP + newP.T - np.diag(np.diag(newP))
 
-'''
-@param runs:	number of times to repeat the simulation
-@param T:		timesteps in one simulation
-@param N:		number of arms
-@param M:		number of agents
-@param P:		P matrix
-
-pools each run into separate processes for multiprocessing
-'''
 def playMultiAgent(P: np.ndarray, originalP: np.ndarray, runs: int, T: int, N: int, M: int, malfunction: int, badAgent: int):
 	bandits = genBandits(N, runs)
 	# P = convertP(P, originalP) # reshape
@@ -417,12 +356,11 @@ def playMultiAgent(P: np.ndarray, originalP: np.ndarray, runs: int, T: int, N: i
 	pool.join()
 
 	# iterative solution for shorter runs where multiprocessing is worse
-	# results = []
-	# for run in range(runs):
-	# 	results.append(playMultiAgentRun(P, T, N, M, bandits[run], malfunction, badAgent))
+	# results = [playMultiAgentRun(P, T, N, M, bandits[run], malfunction, badAgent) for run in range(runs)]
 	
 	# return np.trapz(np.cumsum(np.mean(np.mean(results, axis=0), axis=0)))
-	return np.cumsum(np.mean(np.mean(results, axis=0), axis=0))
+	# return np.cumsum(np.mean(np.mean(results, axis=0), axis=0))
+	return np.mean(np.mean(np.cumsum(results, axis=2), axis=0), axis=0)
 
 if __name__ == '__main__':
 	main()
