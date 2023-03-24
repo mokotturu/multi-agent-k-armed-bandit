@@ -1,2 +1,2 @@
 # Multi-Armed-Bandit-Sim
-Multi ARM Bandit sim code for testing policy, clone of Monish's work.
+Simulation of the k-armed bandit problem in a multi agent environment
