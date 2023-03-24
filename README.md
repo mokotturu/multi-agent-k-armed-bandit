@@ -1,2 +1,2 @@
-# multi-agent-k-armed-bandit
-Simulation of the k-armed bandit problem in a multi agent environment
+# Multi-Armed-Bandit-Sim
+Multi ARM Bandit sim code for testing policy, clone of Monish's work.
